@@ -218,6 +218,11 @@ def compute_f0_dio(wav_numpy, p_len=None, sampling_rate=44100, hop_length=512):
         f0[index] = round(pitch, 1)
     return resize_f0(f0, p_len)
 
+def compute_energy(wav_numpy, p_len=None, sampling_rate=44100, hop_length=512):
+    #TODO
+    return None
+
+
 def compute_f0_harvest(
         wav_numpy, p_len=None, sampling_rate=44100, hop_length=512):
     import pyworld
