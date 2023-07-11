@@ -406,7 +406,7 @@ class Generator_energy(torch.nn.Module):
             x = self.ups[i](x)
             x_source = self.noise_convs[i](har_source)
             x_energy = self.energy_noise_convs[i](energy)
-            # print(4,x_source.shape,har_source.shape,x.shape)
+            print(4,x_source.shape,har_source.shape,x.shape, x_energy.shape)
             x = x + x_source + x_energy
             xs = None
             for j in range(self.num_kernels):
