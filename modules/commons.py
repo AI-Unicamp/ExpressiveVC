@@ -22,6 +22,17 @@ def rand_slice_segments_with_pitch(x, pitch, x_lengths=None, segment_size=4):
   ret_pitch = slice_pitch_segments(pitch, ids_str, segment_size)
   return ret, ret_pitch, ids_str
 
+def rand_slice_segments_with_pitch_and_energy(x, pitch, energy, x_lengths=None, segment_size=4):
+  b, d, t = x.size()
+  if x_lengths is None:
+    x_lengths = t
+  ids_str_max = x_lengths - segment_size + 1
+  ids_str = (torch.rand([b]).to(device=x.device) * ids_str_max).to(dtype=torch.long)
+  ret = slice_segments(x, ids_str, segment_size)
+  ret_pitch = slice_pitch_segments(pitch, ids_str, segment_size)
+  ret_energy = slice_pitch_segments(energy, ids_str, segment_size)
+  return ret, ret_pitch, ret_energy, ids_str
+
 def init_weights(m, mean=0.0, std=0.01):
   classname = m.__class__.__name__
   if classname.find("Conv") != -1:

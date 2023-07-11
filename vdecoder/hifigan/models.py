@@ -349,6 +349,89 @@ class Generator(torch.nn.Module):
         remove_weight_norm(self.conv_post)
 
 
+class Generator_energy(torch.nn.Module):
+    def __init__(self, h):
+        super(Generator, self).__init__()
+        self.h = h
+
+        self.num_kernels = len(h["resblock_kernel_sizes"])
+        self.num_upsamples = len(h["upsample_rates"])
+        self.f0_upsamp = torch.nn.Upsample(scale_factor=np.prod(h["upsample_rates"]))
+        self.energy_upsamp = torch.nn.Upsample(scale_factor=np.prod(h["upsample_rates"]))
+        self.m_source = SourceModuleHnNSF(
+            sampling_rate=h["sampling_rate"],
+            harmonic_num=8)
+        self.noise_convs = nn.ModuleList()
+        self.energy_noise_convc = nn.ModuleList()
+        self.conv_pre = weight_norm(Conv1d(h["inter_channels"], h["upsample_initial_channel"], 7, 1, padding=3))
+        resblock = ResBlock1 if h["resblock"] == '1' else ResBlock2
+        self.ups = nn.ModuleList()
+        for i, (u, k) in enumerate(zip(h["upsample_rates"], h["upsample_kernel_sizes"])):
+            c_cur = h["upsample_initial_channel"] // (2 ** (i + 1))
+            self.ups.append(weight_norm(
+                ConvTranspose1d(h["upsample_initial_channel"] // (2 ** i), h["upsample_initial_channel"] // (2 ** (i + 1)),
+                                k, u, padding=(k - u) // 2)))
+            if i + 1 < len(h["upsample_rates"]):  #
+                stride_f0 = np.prod(h["upsample_rates"][i + 1:])
+                self.noise_convs.append(Conv1d(
+                    1, c_cur, kernel_size=stride_f0 * 2, stride=stride_f0, padding=stride_f0 // 2))
+            else:
+                self.noise_convs.append(Conv1d(1, c_cur, kernel_size=1))
+                self.energy_noise_convc.append(Conv1d(1, c_cur, kernel_size=1))
+
+        self.resblocks = nn.ModuleList()
+        for i in range(len(self.ups)):
+            ch = h["upsample_initial_channel"] // (2 ** (i + 1))
+            for j, (k, d) in enumerate(zip(h["resblock_kernel_sizes"], h["resblock_dilation_sizes"])):
+                self.resblocks.append(resblock(h, ch, k, d))
+
+        self.conv_post = weight_norm(Conv1d(ch, 1, 7, 1, padding=3))
+        self.ups.apply(init_weights)
+        self.conv_post.apply(init_weights)
+        self.cond = nn.Conv1d(h['gin_channels'], h['upsample_initial_channel'], 1)
+
+    def forward(self, x, f0, energy, g=None):
+        # print(1,x.shape,f0.shape,f0[:, None].shape)
+        f0 = self.f0_upsamp(f0[:, None]).transpose(1, 2)  # bs,n,t
+        energy = self.energy_upsamp(energy[:, None] # bs, t, n
+        # print(2,f0.shape)
+        har_source, noi_source, uv = self.m_source(f0)
+        har_source = har_source.transpose(1, 2)
+        x = self.conv_pre(x)
+        x = x + self.cond(g)
+        # print(124,x.shape,har_source.shape)
+        for i in range(self.num_upsamples):
+            x = F.leaky_relu(x, LRELU_SLOPE)
+            # print(3,x.shape)
+            x = self.ups[i](x)
+            x_source = self.noise_convs[i](har_source)
+            x_energy = self.energy_noise_convs[i](energy)
+            # print(4,x_source.shape,har_source.shape,x.shape)
+            x = x + x_source + x_energy
+            xs = None
+            for j in range(self.num_kernels):
+                if xs is None:
+                    xs = self.resblocks[i * self.num_kernels + j](x)
+                else:
+                    xs += self.resblocks[i * self.num_kernels + j](x)
+            x = xs / self.num_kernels
+        x = F.leaky_relu(x)
+        x = self.conv_post(x)
+        x = torch.tanh(x)
+
+        return x
+
+    def remove_weight_norm(self):
+        print('Removing weight norm...')
+        for l in self.ups:
+            remove_weight_norm(l)
+        for l in self.resblocks:
+            l.remove_weight_norm()
+        remove_weight_norm(self.conv_pre)
+        remove_weight_norm(self.conv_post)
+
+
+
 class DiscriminatorP(torch.nn.Module):
     def __init__(self, period, kernel_size=5, stride=3, use_spectral_norm=False):
         super(DiscriminatorP, self).__init__()

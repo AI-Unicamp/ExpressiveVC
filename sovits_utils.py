@@ -219,9 +219,14 @@ def compute_f0_dio(wav_numpy, p_len=None, sampling_rate=44100, hop_length=512):
     return resize_f0(f0, p_len)
 
 def compute_energy(wav_numpy, p_len=None, sampling_rate=44100, hop_length=512):
-    #TODO
-    return None
-
+    if p_len is None:
+        p_len = wav_numpy.shape[0]//hop_length
+    
+    x = librosa.stft(y=wav_numpy, hop_length = hop_length)
+    mag, _ = librosa.magphase(x)
+    energy = np.sqrt(np.sum(mag**2, axis=0))
+        
+    return resize_f0(energy, p_len)
 
 def compute_f0_harvest(
         wav_numpy, p_len=None, sampling_rate=44100, hop_length=512):
@@ -240,6 +245,17 @@ def compute_f0_harvest(
     return resize_f0(f0, p_len)
 
 def f0_to_coarse(f0):
+  is_torch = isinstance(f0, torch.Tensor)
+  f0_mel = 1127 * (1 + f0 / 700).log() if is_torch else 1127 * np.log(1 + f0 / 700)
+  f0_mel[f0_mel > 0] = (f0_mel[f0_mel > 0] - f0_mel_min) * (f0_bin - 2) / (f0_mel_max - f0_mel_min) + 1
+
+  f0_mel[f0_mel <= 1] = 1
+  f0_mel[f0_mel > f0_bin - 1] = f0_bin - 1
+  f0_coarse = (f0_mel + 0.5).long() if is_torch else np.rint(f0_mel).astype(np.int)
+  assert f0_coarse.max() <= 255 and f0_coarse.min() >= 1, (f0_coarse.max(), f0_coarse.min())
+  return f0_coarse
+
+def energy_to_coarse(energy):
   is_torch = isinstance(f0, torch.Tensor)
   f0_mel = 1127 * (1 + f0 / 700).log() if is_torch else 1127 * np.log(1 + f0 / 700)
   f0_mel[f0_mel > 0] = (f0_mel[f0_mel > 0] - f0_mel_min) * (f0_bin - 2) / (f0_mel_max - f0_mel_min) + 1
