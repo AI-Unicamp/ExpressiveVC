@@ -362,7 +362,7 @@ class Generator_energy(torch.nn.Module):
             sampling_rate=h["sampling_rate"],
             harmonic_num=8)
         self.noise_convs = nn.ModuleList()
-        self.energy_noise_convc = nn.ModuleList()
+        self.energy_noise_convs = nn.ModuleList()
         self.conv_pre = weight_norm(Conv1d(h["inter_channels"], h["upsample_initial_channel"], 7, 1, padding=3))
         resblock = ResBlock1 if h["resblock"] == '1' else ResBlock2
         self.ups = nn.ModuleList()
@@ -377,7 +377,7 @@ class Generator_energy(torch.nn.Module):
                     1, c_cur, kernel_size=stride_f0 * 2, stride=stride_f0, padding=stride_f0 // 2))
             else:
                 self.noise_convs.append(Conv1d(1, c_cur, kernel_size=1))
-                self.energy_noise_convc.append(Conv1d(1, c_cur, kernel_size=1))
+                self.energy_noise_convs.append(Conv1d(1, c_cur, kernel_size=1))
 
         self.resblocks = nn.ModuleList()
         for i in range(len(self.ups)):
