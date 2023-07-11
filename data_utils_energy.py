@@ -68,6 +68,7 @@ class TextAudioSpeakerLoader(torch.utils.data.Dataset):
         c = sovits_utils.repeat_expand_2d(c.squeeze(0), f0.shape[0])
 
         energy = np.load(filename + '.energy.npy')
+        energy = torch.FloatTensor(energy)
 
         lmin = min(c.size(-1), spec.size(-1))
         assert abs(c.size(-1) - spec.size(-1)) < 3, (c.size(-1), spec.size(-1), f0.shape, filename)
@@ -143,6 +144,6 @@ class TextAudioCollate:
             uv_padded[i, :uv.size(0)] = uv
 
             energy = row[6]
-            energy_padded[i, :f0.size(0)] = energy
+            energy_padded[i, :energy.size(0)] = energy
 
         return c_padded, f0_padded, spec_padded, wav_padded, spkids, lengths, uv_padded, energy_padded
