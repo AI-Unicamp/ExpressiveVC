@@ -372,8 +372,12 @@ class Generator_energy(torch.nn.Module):
                 ConvTranspose1d(h["upsample_initial_channel"] // (2 ** i), h["upsample_initial_channel"] // (2 ** (i + 1)),
                                 k, u, padding=(k - u) // 2)))
             if i + 1 < len(h["upsample_rates"]):  #
-                stride_f0 = np.prod(h["upsample_rates"][i + 1:])
+                stride_f0 = np.prod(h["upsample_rates"][i + 1:])# Same for energy
+
                 self.noise_convs.append(Conv1d(
+                    1, c_cur, kernel_size=stride_f0 * 2, stride=stride_f0, padding=stride_f0 // 2))
+                
+                self.energy_noise_convs.append(Conv1d(
                     1, c_cur, kernel_size=stride_f0 * 2, stride=stride_f0, padding=stride_f0 // 2))
             else:
                 self.noise_convs.append(Conv1d(1, c_cur, kernel_size=1))
