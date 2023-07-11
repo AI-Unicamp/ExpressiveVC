@@ -190,7 +190,7 @@ class Svc(object):
         uv = uv.unsqueeze(0).to(self.dev)
 
         energy = sovits_utils.compute_energy(wav, sampling_rate=self.target_sample, hop_length=self.hop_size)
-        energy = torch.FloatTensor(energy)
+        energy = torch.FloatTensor(energy).unsqueeze(0).to(self.dev)
 
 
         wav16k = librosa.resample(wav, orig_sr=self.target_sample, target_sr=16000)
