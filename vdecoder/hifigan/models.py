@@ -393,7 +393,7 @@ class Generator_energy(torch.nn.Module):
     def forward(self, x, f0, energy, g=None):
         # print(1,x.shape,f0.shape,f0[:, None].shape)
         f0 = self.f0_upsamp(f0[:, None]).transpose(1, 2)  # bs,n,t
-        energy = self.energy_upsamp(energy[:, None] # bs, t, n
+        energy = self.energy_upsamp(energy[:, None]) # bs, t, n
         # print(2,f0.shape)
         har_source, noi_source, uv = self.m_source(f0)
         har_source = har_source.transpose(1, 2)
