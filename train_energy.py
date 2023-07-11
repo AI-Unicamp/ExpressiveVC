@@ -42,9 +42,9 @@ def validate(hps):
     # Errors that might occur:
     # dataset/44k has more than one character (generally not preferred)
     #assert len(os.listdir('dataset/44k')) == 1, "more than one character present!!!"
-    ckpt = sovits_utils.latest_checkpoint_path(hps.model_dir, "G_*.pth")
+    # ckpt = sovits_utils.latest_checkpoint_path(hps.model_dir, "G_*.pth")
     # no pretrained model present
-    assert ckpt is not None, "no pretrained model present!!!"
+    # assert ckpt is not None, "no pretrained model present!!!"
     # pretrained model still present - no way to check for this?
     pass
 
@@ -86,7 +86,7 @@ def run(rank, n_gpus, hps):
                                  batch_size=1, pin_memory=False,
                                  drop_last=False, collate_fn=collate_fn)
 
-    net_g = SynthesizerTrn(
+    net_g = SynthesizerTrn_energy(
         hps.data.filter_length // 2 + 1,
         hps.train.segment_size // hps.data.hop_length,
         **hps.model).cuda(rank)
@@ -117,8 +117,8 @@ def run(rank, n_gpus, hps):
             epoch_str = 1
             global_step = 0
     except:
-        raise Exception("No pretrained model found")
-        print("Load old checkpoint failed!!!")
+        # raise Exception("No pretrained model found")
+        print("Load old checkpoint failed!!! Starting training from scratch")
         epoch_str = 1
         global_step = 0
     if skip_optimizer:
