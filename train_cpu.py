@@ -118,7 +118,7 @@ def run(rank, n_gpus, hps):
             epoch_str = 1
             global_step = 0
     except:
-        raise Exception("No pretrained model found")
+        # raise Exception("No pretrained model found")
         print("Load old checkpoint failed!!!")
         epoch_str = 1
         global_step = 0
