@@ -14,7 +14,7 @@ from torch.nn.utils import weight_norm, remove_weight_norm, spectral_norm
 import sovits_utils
 from modules.commons import init_weights, get_padding
 from vdecoder.hifigan.models import Generator, Generator_energy
-from sovits_utils import f0_to_coarse
+from sovits_utils import f0_to_coarse, energy_to_coarse
 
 class ResidualCouplingBlock(nn.Module):
   def __init__(self,
@@ -562,7 +562,7 @@ class SynthesizerTrn_energy(nn.Module):
     pred_lf0 = self.f0_decoder(x, norm_lf0, x_mask, spk_emb=g)
 
     # encoder
-    z_ptemp, m_p, logs_p, _ = self.enc_p(x, x_mask, f0=f0_to_coarse(f0), energy = energy)
+    z_ptemp, m_p, logs_p, _ = self.enc_p(x, x_mask, f0=f0_to_coarse(f0), energy = energy_to_coarse(energy))
     z, m_q, logs_q, spec_mask = self.enc_q(spec, spec_lengths, g=g) 
 
     # flow
@@ -586,7 +586,7 @@ class SynthesizerTrn_energy(nn.Module):
         pred_lf0 = self.f0_decoder(x, norm_lf0, x_mask, spk_emb=g)
         f0 = (700 * (torch.pow(10, pred_lf0 * 500 / 2595) - 1)).squeeze(1)
 
-    z_p, m_p, logs_p, c_mask = self.enc_p(x, x_mask, f0=f0_to_coarse(f0), energy = energy, noice_scale=noice_scale)
+    z_p, m_p, logs_p, c_mask = self.enc_p(x, x_mask, f0=f0_to_coarse(f0), energy = energy_to_coarse(energy), noice_scale=noice_scale)
     z = self.flow(z_p, c_mask, g=g, reverse=True)
     o = self.dec(z * c_mask, g=g, f0=f0, energy=energy)
     return o
