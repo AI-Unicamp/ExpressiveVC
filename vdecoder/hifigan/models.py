@@ -408,7 +408,7 @@ class Generator_energy(torch.nn.Module):
         x = self.conv_pre(x)
         x = x + self.cond(g)
 
-        print(f"#2 in Hifigan: energy mean = {energy.mean()} pitch mean = {f0.mean()} x mean = {x.mean()} har mean = {har_count.mean()}")
+        print(f"#2 in Hifigan: energy mean = {energy.mean()} pitch mean = {f0.mean()} x mean = {x.mean()} har mean = {har_source.mean()}")
 
         # print(124,x.shape,har_source.shape)
         for i in range(self.num_upsamples):
