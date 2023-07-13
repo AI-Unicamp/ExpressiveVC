@@ -398,24 +398,25 @@ class Generator_energy(torch.nn.Module):
 
     def forward(self, x, f0, energy, g=None):
         # print(1,x.shape,f0.shape,f0[:, None].shape)
-
-        norm_energy = self.inorm(energy)
-        
+        # norm_energy = self.inorm(energy)
         # print(energy)
         # print(norm_energy)
         # print(f"in Hifigan: energy mean = {energy.mean()} norm_energy mean = {norm_energy.mean()}+-{norm_energy.std()} pitch mean = {f0.mean()} x mean = {x.mean()}")
 
-
+        print(energy.shape)
 
         f0 = self.f0_upsamp(f0[:, None]).transpose(1, 2)  # bs,n,t
         energy = self.energy_upsamp(energy[:, None]) # bs, t, n
 
+        print(energy.shape)
 
         # print(2,f0.shape, energy.shape)
         har_source, noi_source, uv = self.m_source(f0)
         har_source = har_source.transpose(1, 2)
         x = self.conv_pre(x)
         x = x + self.cond(g)
+
+        print(x.shape)
 
         # print(f"#2 in Hifigan: energy mean = {energy.mean()} pitch mean = {f0.mean()} x mean = {x.mean()} har mean = {har_source.mean()}")
 
@@ -426,6 +427,7 @@ class Generator_energy(torch.nn.Module):
             x = self.ups[i](x)
             x_source = self.noise_convs[i](har_source)
             x_energy = self.energy_noise_convs[i](energy)
+            print(f"iter {i} shape = {x_energy.shape}")
             # print(4,x_source.shape,har_source.shape,x.shape, x_energy.shape, energy.shape)
             x = x + x_source + x_energy
             xs = None
