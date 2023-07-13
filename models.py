@@ -496,9 +496,11 @@ class SynthesizerTrn_energy(nn.Module):
     ssl_dim,
     n_speakers,
     sampling_rate=44100,
+    use_local_max = False,
     **kwargs):
 
     super().__init__()
+    self.use_local_max = use_local_max
     self.spec_channels = spec_channels
     self.inter_channels = inter_channels
     self.hidden_channels = hidden_channels
@@ -517,6 +519,7 @@ class SynthesizerTrn_energy(nn.Module):
     self.gin_channels = gin_channels
     self.ssl_dim = ssl_dim
     self.emb_g = nn.Embedding(n_speakers, gin_channels)
+
 
     self.pre = nn.Conv1d(ssl_dim, hidden_channels, kernel_size=5, padding=2)
 
@@ -567,7 +570,7 @@ class SynthesizerTrn_energy(nn.Module):
     pred_lf0 = self.f0_decoder(x, norm_lf0, x_mask, spk_emb=g)
 
     # encoder
-    z_ptemp, m_p, logs_p, _ = self.enc_p(x, x_mask, f0=f0_to_coarse(f0), energy = energy_to_coarse(energy))
+    z_ptemp, m_p, logs_p, _ = self.enc_p(x, x_mask, f0=f0_to_coarse(f0), energy = energy_to_coarse(energy, self.use_local_max))
     z, m_q, logs_q, spec_mask = self.enc_q(spec, spec_lengths, g=g) 
 
     # flow
@@ -575,7 +578,7 @@ class SynthesizerTrn_energy(nn.Module):
     z_slice, pitch_slice, energy_slice, ids_slice = commons.rand_slice_segments_with_pitch_and_energy(z, f0, energy, spec_lengths, self.segment_size)
 
     # nsf decoder
-    o = self.dec(z_slice, g=g, f0=pitch_slice, energy = energy_slice)
+    o = self.dec(z_slice, g=g, f0=pitch_slice, energy = energy_to_coarse(energy_slice, self.use_local_max))
 
     return o, ids_slice, spec_mask, (z, z_p, m_p, logs_p, m_q, logs_q), pred_lf0, norm_lf0, lf0
 
@@ -591,7 +594,7 @@ class SynthesizerTrn_energy(nn.Module):
         pred_lf0 = self.f0_decoder(x, norm_lf0, x_mask, spk_emb=g)
         f0 = (700 * (torch.pow(10, pred_lf0 * 500 / 2595) - 1)).squeeze(1)
 
-    z_p, m_p, logs_p, c_mask = self.enc_p(x, x_mask, f0=f0_to_coarse(f0), energy = energy_to_coarse(energy), noice_scale=noice_scale)
+    z_p, m_p, logs_p, c_mask = self.enc_p(x, x_mask, f0=f0_to_coarse(f0), energy = energy_to_coarse(energy, self.use_local_max), noice_scale=noice_scale)
     z = self.flow(z_p, c_mask, g=g, reverse=True)
-    o = self.dec(z * c_mask, g=g, f0=f0, energy=energy)
+    o = self.dec(z * c_mask, g=g, f0=f0, energy=energy_to_coarse(energy, self.use_local_max))
     return o

@@ -362,7 +362,7 @@ class Generator_energy(torch.nn.Module):
             sampling_rate=h["sampling_rate"],
             harmonic_num=8)
         self.noise_convs = nn.ModuleList()
-        self.energy_noise_convs = nn.ModuleList()
+        # self.energy_noise_convs = nn.ModuleList()
         self.conv_pre = weight_norm(Conv1d(h["inter_channels"], h["upsample_initial_channel"], 7, 1, padding=3))
         resblock = ResBlock1 if h["resblock"] == '1' else ResBlock2
         self.ups = nn.ModuleList()
@@ -377,11 +377,11 @@ class Generator_energy(torch.nn.Module):
                 self.noise_convs.append(Conv1d(
                     1, c_cur, kernel_size=stride_f0 * 2, stride=stride_f0, padding=stride_f0 // 2))
                 
-                self.energy_noise_convs.append(Conv1d(
-                    1, c_cur, kernel_size=stride_f0 * 2, stride=stride_f0, padding=stride_f0 // 2))
+                # self.energy_noise_convs.append(Conv1d(
+                    # 1, c_cur, kernel_size=stride_f0 * 2, stride=stride_f0, padding=stride_f0 // 2))
             else:
                 self.noise_convs.append(Conv1d(1, c_cur, kernel_size=1))
-                self.energy_noise_convs.append(Conv1d(1, c_cur, kernel_size=1))
+                # self.energy_noise_convs.append(Conv1d(1, c_cur, kernel_size=1))
 
         self.resblocks = nn.ModuleList()
         for i in range(len(self.ups)):
@@ -393,8 +393,9 @@ class Generator_energy(torch.nn.Module):
         self.ups.apply(init_weights)
         self.conv_post.apply(init_weights)
         self.cond = nn.Conv1d(h['gin_channels'], h['upsample_initial_channel'], 1)
+        self.energy_emb = nn.Embedding(256, h['upsample_initial_channel'])
 
-        self.inorm = nn.InstanceNorm1d(1, affine=True)
+        # self.inorm = nn.InstanceNorm1d(1, affine=True)
 
     def forward(self, x, f0, energy, g=None):
         # print(1,x.shape,f0.shape,f0[:, None].shape)
@@ -403,20 +404,22 @@ class Generator_energy(torch.nn.Module):
         # print(norm_energy)
         # print(f"in Hifigan: energy mean = {energy.mean()} norm_energy mean = {norm_energy.mean()}+-{norm_energy.std()} pitch mean = {f0.mean()} x mean = {x.mean()}")
 
-        print(energy.shape)
+        # print(energy.shape)
 
         f0 = self.f0_upsamp(f0[:, None]).transpose(1, 2)  # bs,n,t
-        energy = self.energy_upsamp(energy[:, None]) # bs, t, n
+        # energy = self.energy_upsamp(energy[:, None]) # bs, t, n
+        energy = self.energy_emb(energy)
 
-        print(energy.shape)
+
+        print(energy.shape, energy.mean())
 
         # print(2,f0.shape, energy.shape)
         har_source, noi_source, uv = self.m_source(f0)
         har_source = har_source.transpose(1, 2)
         x = self.conv_pre(x)
-        x = x + self.cond(g)
+        x = x + self.cond(g) + energy
 
-        print(x.shape)
+        # print(x.shape)
 
         # print(f"#2 in Hifigan: energy mean = {energy.mean()} pitch mean = {f0.mean()} x mean = {x.mean()} har mean = {har_source.mean()}")
 
@@ -426,10 +429,10 @@ class Generator_energy(torch.nn.Module):
             # print(3,x.shape)
             x = self.ups[i](x)
             x_source = self.noise_convs[i](har_source)
-            x_energy = self.energy_noise_convs[i](energy)
-            print(f"iter {i} shape = {x_energy.shape}")
+            # x_energy = self.energy_noise_convs[i](energy)
+            # print(f"iter {i} shape = {x_energy.shape}")
             # print(4,x_source.shape,har_source.shape,x.shape, x_energy.shape, energy.shape)
-            x = x + x_source + x_energy
+            x = x + x_source
             xs = None
             for j in range(self.num_kernels):
                 if xs is None:

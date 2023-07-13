@@ -259,17 +259,22 @@ energy_bin = 256
 energy_min = 0
 energy_max = 400
 
-def energy_to_coarse(energy):
+def energy_to_coarse(energy, use_local_max = False):
   is_torch = isinstance(energy, torch.Tensor)
-
-  energy[energy > 0] = (energy[energy > 0] - energy_min) * (energy_bin - 2) / (energy_max - energy_min) + 1
+      
+  energy = energy.clone() if is_torch else energy.copy()
+  
+      
+  if use_local_max:
+      energy[energy > 0] = (energy[energy > 0] - energy_min) * (energy_bin - 2) / (energy.max() - energy_min) + 1
+  else:
+      energy[energy > 0] = (energy[energy > 0] - energy_min) * (energy_bin - 2) / (energy_max - energy_min) + 1
 
   energy[energy <= 1] = 1
   energy[energy > energy_bin - 1] = energy_bin - 1
   energy_coarse = (energy + 0.5).long() if is_torch else np.rint(energy).astype(np.int)
   assert energy_coarse.max() <= 255 and energy_coarse.min() >= 1, (energy_coarse.max(), energy_coarse.min())
   return energy_coarse
-
 
 def get_hubert_model(quiet=False):
   vec_path = "hubert/checkpoint_best_legacy_500.pt"
