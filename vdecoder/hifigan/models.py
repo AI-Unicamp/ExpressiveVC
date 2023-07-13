@@ -420,7 +420,7 @@ class Generator_energy(torch.nn.Module):
 
         print(x.shape)
 
-        x = x + self.cond(g) + energy
+        x = x + self.cond(g) + energy.transpose(1,2)
 
         # print(x.shape)
 
