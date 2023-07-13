@@ -27,6 +27,7 @@ def main():
     parser.add_argument('-c', '--config_path', type=str, default="configs/config.json", help='配置文件路径')
     parser.add_argument('-n', '--clean_names', type=str, nargs='+', default=["君の知らない物語-src.wav"], help='wav文件名列表，放在raw文件夹下')
     parser.add_argument('-t', '--trans', type=int, nargs='+', default=[0], help='音高调整，支持正负（半音）')
+    parser.add_argument('-te', '--trans_energy', type=int, nargs='+', default=[0])
     parser.add_argument('-s', '--spk_list', type=str, nargs='+', default=['nen'], help='合成目标说话人名称')
 
     # 可选项部分
@@ -48,6 +49,7 @@ def main():
     infer_tool_energy.mkdir(["raw", "results"])
     clean_names = args.clean_names
     trans = args.trans
+    trans_energy = args.trans_energy
     spk_list = args.spk_list
     slice_db = args.slice_db
     wav_format = args.wav_format
@@ -82,7 +84,7 @@ def main():
                     raw_path = io.BytesIO()
                     soundfile.write(raw_path, data, audio_sr, format="wav")
                     raw_path.seek(0)
-                    out_audio, out_sr = svc_model.infer(spk, tran, raw_path,
+                    out_audio, out_sr = svc_model.infer(spk, tran, trans_energy, raw_path,
                                                         cluster_infer_ratio=cluster_infer_ratio,
                                                         auto_predict_f0=auto_predict_f0,
                                                         noice_scale=noice_scale

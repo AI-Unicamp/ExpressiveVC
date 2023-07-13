@@ -152,7 +152,7 @@ class Svc(object):
 
 
 
-    def get_unit_f0(self, in_path, tran, cluster_infer_ratio, speaker,
+    def get_unit_f0(self, in_path, tran, trans_energy, cluster_infer_ratio, speaker,
             f0_method="harvest"):
 
         wav, sr = librosa.load(in_path, sr=self.target_sample)
@@ -190,6 +190,7 @@ class Svc(object):
         uv = uv.unsqueeze(0).to(self.dev)
 
         energy = sovits_utils.compute_energy(wav, sampling_rate=self.target_sample, hop_length=self.hop_size)
+        energy = energy*2**(trans_energy/12)
         energy = torch.FloatTensor(energy).unsqueeze(0).to(self.dev)
 
 
@@ -211,7 +212,7 @@ class Svc(object):
         c = c.unsqueeze(0)
         return c, f0, uv, energy
 
-    def infer(self, speaker, tran, raw_path,
+    def infer(self, speaker, tran, trans_energy, raw_path,
               cluster_infer_ratio=0,
               auto_predict_f0=False,
               noice_scale=0.8,
@@ -219,7 +220,7 @@ class Svc(object):
         speaker_id = self.spk2id[speaker]
         sid = torch.LongTensor([int(speaker_id)]).to(self.dev).unsqueeze(0)
         c, f0, uv, energy = self.get_unit_f0(
-            raw_path, tran, cluster_infer_ratio, speaker, f0_method)
+            raw_path, tran, trans_energy, cluster_infer_ratio, speaker, f0_method)
         if "half" in self.net_g_path and torch.cuda.is_available():
             c = c.half()
         with torch.no_grad():
