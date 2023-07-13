@@ -402,7 +402,8 @@ class Generator_energy(torch.nn.Module):
         norm_energy = self.inorm(energy)
         
         print(energy)
-        print(f"in Hifigan: energy mean = {energy.mean()} norm_energy mean = {norm_energy.mean()}+-{norm_energy.std()} pitch mean = {f0.mean()} x mean = {x.mean()}")
+        print(norm_energy)
+        # print(f"in Hifigan: energy mean = {energy.mean()} norm_energy mean = {norm_energy.mean()}+-{norm_energy.std()} pitch mean = {f0.mean()} x mean = {x.mean()}")
 
 
 
@@ -416,7 +417,7 @@ class Generator_energy(torch.nn.Module):
         x = self.conv_pre(x)
         x = x + self.cond(g)
 
-        print(f"#2 in Hifigan: energy mean = {energy.mean()} pitch mean = {f0.mean()} x mean = {x.mean()} har mean = {har_source.mean()}")
+        # print(f"#2 in Hifigan: energy mean = {energy.mean()} pitch mean = {f0.mean()} x mean = {x.mean()} har mean = {har_source.mean()}")
 
         # print(124,x.shape,har_source.shape)
         for i in range(self.num_upsamples):

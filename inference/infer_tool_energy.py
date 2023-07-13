@@ -224,13 +224,13 @@ class Svc(object):
         speaker_id = self.spk2id[speaker]
         sid = torch.LongTensor([int(speaker_id)]).to(self.dev).unsqueeze(0)
 
-        print(tran, trans_energy)
+        # print(tran, trans_energy)
 
         c, f0, uv, energy = self.get_unit_f0(
             raw_path, tran, trans_energy, cluster_infer_ratio, speaker, f0_method)
         
-        print(f"pre vits energy mean = {energy.mean()}")
-        print(energy)
+        # print(f"pre vits energy mean = {energy.mean()}")
+        # print(energy)
 
         if "half" in self.net_g_path and torch.cuda.is_available():
             c = c.half()
