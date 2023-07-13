@@ -394,9 +394,16 @@ class Generator_energy(torch.nn.Module):
         self.conv_post.apply(init_weights)
         self.cond = nn.Conv1d(h['gin_channels'], h['upsample_initial_channel'], 1)
 
+        self.inorm = nn.InstanceNorm1d(1, affine=True)
+
     def forward(self, x, f0, energy, g=None):
         # print(1,x.shape,f0.shape,f0[:, None].shape)
-        print(f"in Hifigan: energy mean = {energy.mean()} pitch mean = {f0.mean()} x mean = {x.mean()}")
+
+        norm_energy = self.inorm(energy)
+
+        print(f"in Hifigan: energy mean = {energy.mean()} norm_energy mean = {norm_energy.mean()} pitch mean = {f0.mean()} x mean = {x.mean()}")
+
+
 
         f0 = self.f0_upsamp(f0[:, None]).transpose(1, 2)  # bs,n,t
         energy = self.energy_upsamp(energy[:, None]) # bs, t, n
