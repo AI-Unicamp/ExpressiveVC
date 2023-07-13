@@ -501,6 +501,9 @@ class SynthesizerTrn_energy(nn.Module):
 
     super().__init__()
     self.use_local_max = use_local_max
+
+    print(f'Running energy embedding using_local_max = {self.use_local_max}')
+
     self.spec_channels = spec_channels
     self.inter_channels = inter_channels
     self.hidden_channels = hidden_channels
