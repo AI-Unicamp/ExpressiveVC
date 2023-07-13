@@ -230,6 +230,7 @@ class Svc(object):
             raw_path, tran, trans_energy, cluster_infer_ratio, speaker, f0_method)
         
         print(f"pre vits energy mean = {energy.mean()}")
+        print(energy)
 
         if "half" in self.net_g_path and torch.cuda.is_available():
             c = c.half()

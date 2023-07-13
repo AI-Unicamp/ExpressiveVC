@@ -400,8 +400,9 @@ class Generator_energy(torch.nn.Module):
         # print(1,x.shape,f0.shape,f0[:, None].shape)
 
         norm_energy = self.inorm(energy)
-
-        print(f"in Hifigan: energy mean = {energy.mean()} norm_energy mean = {norm_energy.mean()} pitch mean = {f0.mean()} x mean = {x.mean()}")
+        
+        print(energy)
+        print(f"in Hifigan: energy mean = {energy.mean()} norm_energy mean = {norm_energy.mean()}+-{norm_energy.std()} pitch mean = {f0.mean()} x mean = {x.mean()}")
 
 
 
