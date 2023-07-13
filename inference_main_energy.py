@@ -27,7 +27,7 @@ def main():
     parser.add_argument('-c', '--config_path', type=str, default="configs/config.json", help='配置文件路径')
     parser.add_argument('-n', '--clean_names', type=str, nargs='+', default=["君の知らない物語-src.wav"], help='wav文件名列表，放在raw文件夹下')
     parser.add_argument('-t', '--trans', type=int, nargs='+', default=[0], help='音高调整，支持正负（半音）')
-    parser.add_argument('-te', '--trans_energy', type=int, nargs='+', default=[0])
+    parser.add_argument('-te', '--trans_energy', type=int, default=0)
     parser.add_argument('-s', '--spk_list', type=str, nargs='+', default=['nen'], help='合成目标说话人名称')
 
     # 可选项部分
