@@ -399,6 +399,8 @@ class Generator_energy(torch.nn.Module):
         f0 = self.f0_upsamp(f0[:, None]).transpose(1, 2)  # bs,n,t
         energy = self.energy_upsamp(energy[:, None]) # bs, t, n
 
+        print(f"in Hifigan: energy mean = {energy.mean()} pitch mean = {f0.mean()} x mean = {x.mean()}")
+
         # print(2,f0.shape, energy.shape)
         har_source, noi_source, uv = self.m_source(f0)
         har_source = har_source.transpose(1, 2)
