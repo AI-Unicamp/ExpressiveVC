@@ -190,7 +190,7 @@ class Svc(object):
         uv = uv.unsqueeze(0).to(self.dev)
 
         energy = sovits_utils.compute_energy(wav, sampling_rate=self.target_sample, hop_length=self.hop_size)
-        energy = energy*2**(trans_energy/12)
+        energy = energy * 2 ** (trans_energy / 12)
         energy = torch.FloatTensor(energy).unsqueeze(0).to(self.dev)
 
 
@@ -219,6 +219,9 @@ class Svc(object):
               f0_method="harvest"):
         speaker_id = self.spk2id[speaker]
         sid = torch.LongTensor([int(speaker_id)]).to(self.dev).unsqueeze(0)
+
+        print(tran, trans_energy)
+
         c, f0, uv, energy = self.get_unit_f0(
             raw_path, tran, trans_energy, cluster_infer_ratio, speaker, f0_method)
         if "half" in self.net_g_path and torch.cuda.is_available():
@@ -231,7 +234,7 @@ class Svc(object):
                 print("vits use time:{}".format(use_time))
         return audio, audio.shape[-1]
 
-    def slice_inference(self,raw_audio_path, spk, tran, slice_db,cluster_infer_ratio, auto_predict_f0,noice_scale, pad_seconds=0.5):
+    def slice_inference(self,raw_audio_path, spk, tran, trans_energy, slice_db,cluster_infer_ratio, auto_predict_f0,noice_scale, pad_seconds=0.5):
         wav_path = raw_audio_path
         chunks = slicer.cut(wav_path, db_thresh=slice_db)
         audio_data, audio_sr = slicer.chunks2audio(wav_path, chunks)
@@ -252,7 +255,7 @@ class Svc(object):
                     print('jump empty segment')
                 _audio = np.zeros(length)
             else:
-                out_audio, out_sr = self.infer(spk, tran, raw_path,
+                out_audio, out_sr = self.infer(spk, tran, trans_energy, raw_path,
                                                     cluster_infer_ratio=cluster_infer_ratio,
                                                     auto_predict_f0=auto_predict_f0,
                                                     noice_scale=noice_scale
