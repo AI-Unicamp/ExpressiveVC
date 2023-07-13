@@ -457,9 +457,9 @@ class TextEncoder_energy(nn.Module):
 
   def forward(self, x, x_mask, f0=None, energy = None, noice_scale=1):
 
-    print(energy.shape)
-    print(self.energy_emb(energy).shape)
-    print(x.shape)
+    # print(energy.shape)
+    # print(self.energy_emb(energy).shape)
+    # print(x.shape)
 
     x = x + self.f0_emb(f0).transpose(1,2)
     x = x + self.energy_emb(energy).transpose(1,2)
