@@ -228,6 +228,9 @@ class Svc(object):
 
         c, f0, uv, energy = self.get_unit_f0(
             raw_path, tran, trans_energy, cluster_infer_ratio, speaker, f0_method)
+        
+        print(f"pre vits energy mean = {energy.mean()}")
+
         if "half" in self.net_g_path and torch.cuda.is_available():
             c = c.half()
         with torch.no_grad():
