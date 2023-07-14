@@ -4,10 +4,13 @@ This is a repository based on so-vits-svc singing voice conversion model with fo
 
 Implementation plans that differs from original so-vits-svc
 
-- [ ] Add energy conditioning (maybe spectral tilt also)
+- [ ] (WIP) Add energy conditioning
+  - [x] Raw conditioning (failed, already excluded branch)
+  - [ ] Quantized energy with lookup embedding aggregation  
 - [ ] Add option to SSL representation (default is ContentVec or Hubert)
 - [ ] Release pre-trained model 
 - [ ] Change vocoder to MB-ISTFT-VITS for better inference-time
+- [ ] Add KNN-VC for better cross-lingual
 
 Experiments plans
 
