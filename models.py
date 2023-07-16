@@ -497,12 +497,15 @@ class SynthesizerTrn_energy(nn.Module):
     n_speakers,
     sampling_rate=44100,
     use_local_max = False,
-    energy_agg_type = 'one_step',
+    energy_use_log = False,
+    energy_agg_type = 'one_step', 
+    energy_linear_dim = 32,
     **kwargs):
 
     super().__init__()
     self.use_local_max = use_local_max
-
+    self.energy_use_log = energy_use_log
+    self.energy_agg_type = energy_agg_type
     print(f'Running energy embedding using_local_max = {self.use_local_max}')
 
     self.spec_channels = spec_channels
@@ -546,7 +549,8 @@ class SynthesizerTrn_energy(nn.Module):
         "upsample_initial_channel": upsample_initial_channel,
         "upsample_kernel_sizes": upsample_kernel_sizes,
         "gin_channels": gin_channels,
-        "energy_agg_type": energy_agg_type
+        "energy_agg_type": energy_agg_type,
+        "energy_linear_dim": energy_linear_dim
     }
     self.dec = Generator_energy(h=hps)
     self.enc_q = Encoder(spec_channels, inter_channels, hidden_channels, 5, 1, 16, gin_channels=gin_channels)
@@ -601,5 +605,12 @@ class SynthesizerTrn_energy(nn.Module):
 
     z_p, m_p, logs_p, c_mask = self.enc_p(x, x_mask, f0=f0_to_coarse(f0), energy = energy_to_coarse(energy, self.use_local_max), noice_scale=noice_scale)
     z = self.flow(z_p, c_mask, g=g, reverse=True)
-    o = self.dec(z * c_mask, g=g, f0=f0, energy=energy_to_coarse(energy, self.use_local_max))
+
+    if(self.energy_use_log):
+        energy_ = torch.log10(energy)
+    
+    if(self.energy_agg_type == 'one_step')
+        energy_ = energy_to_coarse(energy, self.use_local_max)
+        
+    o = self.dec(z * c_mask, g=g, f0=f0, energy=energy_)
     return o
