@@ -361,7 +361,7 @@ class Generator_energy(torch.nn.Module):
         ## Energy args
         if(h["energy_agg_type"] == 'one_step'):
             self.energy_emb = nn.Embedding(256, h['upsample_initial_channel'])
-        elif(h['energy_agg_type' == 'all_step']):
+        elif(h['energy_agg_type'] == 'all_step'):
             self.energy_noise_convs = nn.ModuleList()
             if(h['energy_linear_dim'] == 1):
                 print('Using raw energy!')
