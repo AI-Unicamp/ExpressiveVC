@@ -588,10 +588,10 @@ class SynthesizerTrn_energy(nn.Module):
     z_slice, pitch_slice, energy_slice, ids_slice = commons.rand_slice_segments_with_pitch_and_energy(z, f0, energy, spec_lengths, self.segment_size)
 
     if(self.energy_use_log):
-        energy_ = torch.log10(energy)
+        energy_ = torch.log10(energy_slice)
     
     if(self.energy_agg_type == 'one_step'):
-        energy_ = energy_to_coarse(energy, self.use_local_max)
+        energy_ = energy_to_coarse(energy_slice, self.use_local_max)
 
     # nsf decoder
     o = self.dec(z_slice, g=g, f0=pitch_slice, energy = energy_)
