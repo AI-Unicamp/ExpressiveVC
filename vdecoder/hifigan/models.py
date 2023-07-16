@@ -424,15 +424,18 @@ class Generator_energy(torch.nn.Module):
 
         # print(energy.shape)
 
+        print(f'energy #1 shape = {energy.shape}')
+        print(f'f0 #1 shape = {f0.shape}')
         f0 = self.f0_upsamp(f0[:, None]).transpose(1, 2)  # bs,n,t
-
+        print(f'f0 #2 shape = {f0.shape}')
         if(self.use_energy_convs):
             if(self.energy_linear_dim == 1):
                 energy = self.energy_upsamp(energy[:, None]).transpose(1, 2) # bs, t, n  
             else:
                 energy = self.energy_emb(energy.unsqueeze(-1))
+                print(f'energy #2 shape = {energy.shape}')
                 energy = self.energy_upsamp(energy.transpose(1, 2)) # bs, t, n
-                print(energy.shape, f0.shape)
+                print(f'energy #3 shape = {energy.shape}')
         else:
             energy = self.energy_emb(energy)
 
@@ -441,6 +444,8 @@ class Generator_energy(torch.nn.Module):
         # print(2,f0.shape, energy.shape)
         har_source, noi_source, uv = self.m_source(f0)
         har_source = har_source.transpose(1, 2)
+        print(f'f0 #3 shape = {har_source.shape}')
+        
         x = self.conv_pre(x)
 
         # print(x.shape)
