@@ -395,11 +395,11 @@ class Generator_energy(torch.nn.Module):
                 self.noise_convs.append(Conv1d(
                     1, c_cur, kernel_size=stride_f0 * 2, stride=stride_f0, padding=stride_f0 // 2))
                 
-                if(h['energy_agg_type' == 'all_step']):
+                if(h['energy_agg_type'] == 'all_step'):
                     self.energy_noise_convs.append(Conv1d(h['energy_linear_dim'], c_cur, kernel_size=stride_f0 * 2, stride=stride_f0, padding=stride_f0 // 2))
             else:
                 self.noise_convs.append(Conv1d(1, c_cur, kernel_size=1))
-                if(h['energy_agg_type' == 'all_step']):
+                if(h['energy_agg_type'] == 'all_step'):
                     self.energy_noise_convs.append(Conv1d(h['energy_linear_dim'], c_cur, kernel_size=1))
 
         self.resblocks = nn.ModuleList()
