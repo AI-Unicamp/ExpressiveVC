@@ -497,6 +497,7 @@ class SynthesizerTrn_energy(nn.Module):
     n_speakers,
     sampling_rate=44100,
     use_local_max = False,
+    energy_agg_type = 'one_step',
     **kwargs):
 
     super().__init__()
@@ -545,6 +546,7 @@ class SynthesizerTrn_energy(nn.Module):
         "upsample_initial_channel": upsample_initial_channel,
         "upsample_kernel_sizes": upsample_kernel_sizes,
         "gin_channels": gin_channels,
+        "energy_agg_type": energy_agg_type
     }
     self.dec = Generator_energy(h=hps)
     self.enc_q = Encoder(spec_channels, inter_channels, hidden_channels, 5, 1, 16, gin_channels=gin_channels)

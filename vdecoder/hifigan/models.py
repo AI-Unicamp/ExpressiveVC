@@ -354,6 +354,25 @@ class Generator_energy(torch.nn.Module):
         super(Generator_energy, self).__init__()
         self.h = h
 
+        self.use_energy_convs = False # default value
+
+        self.energy_linear_dim = h['energy_linear_dim']
+
+        ## Energy args
+        if(h["energy_agg_type"] == 'one_step'):
+            self.energy_emb = nn.Embedding(256, h['upsample_initial_channel'])
+        elif(h['energy_agg_type' == 'all_step']):
+            self.energy_noise_convs = nn.ModuleList()
+            if(h['energy_linear_dim'] == 1):
+                print('Using raw energy!')
+                self.energy_emb = None
+            else:
+                self.energy_emb = nn.Linear(1,h['energy_linear_dim'])
+            self.use_energy_convs = True 
+        else:
+            print(f'''energy_agg_type = {h['energy_agg_type']} does not exit.''')
+        ## End energy args
+
         self.num_kernels = len(h["resblock_kernel_sizes"])
         self.num_upsamples = len(h["upsample_rates"])
         self.f0_upsamp = torch.nn.Upsample(scale_factor=np.prod(h["upsample_rates"]))
@@ -362,7 +381,6 @@ class Generator_energy(torch.nn.Module):
             sampling_rate=h["sampling_rate"],
             harmonic_num=8)
         self.noise_convs = nn.ModuleList()
-        # self.energy_noise_convs = nn.ModuleList()
         self.conv_pre = weight_norm(Conv1d(h["inter_channels"], h["upsample_initial_channel"], 7, 1, padding=3))
         resblock = ResBlock1 if h["resblock"] == '1' else ResBlock2
         self.ups = nn.ModuleList()
@@ -377,11 +395,12 @@ class Generator_energy(torch.nn.Module):
                 self.noise_convs.append(Conv1d(
                     1, c_cur, kernel_size=stride_f0 * 2, stride=stride_f0, padding=stride_f0 // 2))
                 
-                # self.energy_noise_convs.append(Conv1d(
-                    # 1, c_cur, kernel_size=stride_f0 * 2, stride=stride_f0, padding=stride_f0 // 2))
+                if(h['energy_agg_type' == 'all_step']):
+                    self.energy_noise_convs.append(Conv1d(h['energy_linear_dim'], c_cur, kernel_size=stride_f0 * 2, stride=stride_f0, padding=stride_f0 // 2))
             else:
                 self.noise_convs.append(Conv1d(1, c_cur, kernel_size=1))
-                # self.energy_noise_convs.append(Conv1d(1, c_cur, kernel_size=1))
+                if(h['energy_agg_type' == 'all_step']):
+                    self.energy_noise_convs.append(Conv1d(h['energy_linear_dim'], c_cur, kernel_size=1))
 
         self.resblocks = nn.ModuleList()
         for i in range(len(self.ups)):
@@ -393,7 +412,6 @@ class Generator_energy(torch.nn.Module):
         self.ups.apply(init_weights)
         self.conv_post.apply(init_weights)
         self.cond = nn.Conv1d(h['gin_channels'], h['upsample_initial_channel'], 1)
-        self.energy_emb = nn.Embedding(256, h['upsample_initial_channel'])
 
         # self.inorm = nn.InstanceNorm1d(1, affine=True)
 
@@ -407,9 +425,16 @@ class Generator_energy(torch.nn.Module):
         # print(energy.shape)
 
         f0 = self.f0_upsamp(f0[:, None]).transpose(1, 2)  # bs,n,t
-        # energy = self.energy_upsamp(energy[:, None]) # bs, t, n
-        energy = self.energy_emb(energy)
 
+        if(self.use_energy_convs):
+            if(self.energy_linear_dim == 1):
+                energy = self.energy_upsamp(energy[:, None]).transpose(1, 2) # bs, t, n  
+            else:
+                energy = self.energy_emb(energy)
+                energy = self.energy_upsamp(energy.transpose(1, 2)) # bs, t, n
+                print(energy.shape, f0.shape)
+        else:
+            energy = self.energy_emb(energy)
 
         # print(energy.shape, energy.mean())
 
@@ -420,7 +445,10 @@ class Generator_energy(torch.nn.Module):
 
         # print(x.shape)
 
-        x = x + self.cond(g) + energy.transpose(1,2)
+        if(self.use_energy_convs):
+            x = x + self.cond(g)
+        else:
+            x = x + self.cond(g) + energy.transpose(1,2)
 
         # print(x.shape)
 
@@ -432,10 +460,14 @@ class Generator_energy(torch.nn.Module):
             # print(3,x.shape)
             x = self.ups[i](x)
             x_source = self.noise_convs[i](har_source)
-            # x_energy = self.energy_noise_convs[i](energy)
+
+            if(self.use_energy_convs):
+                x_energy = self.energy_noise_convs[i](energy)
+                x = x + x_source + x_energy
             # print(f"iter {i} shape = {x_energy.shape}")
             # print(4,x_source.shape,har_source.shape,x.shape, x_energy.shape, energy.shape)
-            x = x + x_source
+            else:
+                x = x + x_source
             xs = None
             for j in range(self.num_kernels):
                 if xs is None:
