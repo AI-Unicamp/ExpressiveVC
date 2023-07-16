@@ -506,7 +506,8 @@ class SynthesizerTrn_energy(nn.Module):
     self.use_local_max = use_local_max
     self.energy_use_log = energy_use_log
     self.energy_agg_type = energy_agg_type
-    print(f'Running energy embedding using_local_max = {self.use_local_max}')
+    self.energy_linear_dim = energy_linear_dim
+    print(f'Running energy embedding:\tusing_local_max = {self.use_local_max}\tenergy_agg_type = {self.energy_agg_type}\tenergy_linear_dim = {self.energy_linear_dim}')
 
     self.spec_channels = spec_channels
     self.inter_channels = inter_channels
@@ -611,6 +612,6 @@ class SynthesizerTrn_energy(nn.Module):
     
     if(self.energy_agg_type == 'one_step')
         energy_ = energy_to_coarse(energy, self.use_local_max)
-        
+
     o = self.dec(z * c_mask, g=g, f0=f0, energy=energy_)
     return o
