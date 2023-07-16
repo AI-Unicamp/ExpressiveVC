@@ -610,7 +610,7 @@ class SynthesizerTrn_energy(nn.Module):
     if(self.energy_use_log):
         energy_ = torch.log10(energy)
     
-    if(self.energy_agg_type == 'one_step')
+    if(self.energy_agg_type == 'one_step'):
         energy_ = energy_to_coarse(energy, self.use_local_max)
 
     o = self.dec(z * c_mask, g=g, f0=f0, energy=energy_)
