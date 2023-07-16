@@ -416,50 +416,38 @@ class Generator_energy(torch.nn.Module):
         # self.inorm = nn.InstanceNorm1d(1, affine=True)
 
     def forward(self, x, f0, energy, g=None):
-        # print(1,x.shape,f0.shape,f0[:, None].shape)
-        # norm_energy = self.inorm(energy)
-        # print(energy)
-        # print(norm_energy)
-        # print(f"in Hifigan: energy mean = {energy.mean()} norm_energy mean = {norm_energy.mean()}+-{norm_energy.std()} pitch mean = {f0.mean()} x mean = {x.mean()}")
-
-        # print(energy.shape)
-
-        print(f'energy #1 shape = {energy.shape}')
-        print(f'f0 #1 shape = {f0.shape}')
-        f0 = self.f0_upsamp(f0[:, None]).transpose(1, 2)  # bs,n,t
-        print(f'f0 #2 shape = {f0.shape}')
+        '''
+            f0: [bs, L]
+            energy: [bs, L]
+        '''
+        # print(f'energy #1 shape = {energy.shape}')
+        # print(f'f0 #1 shape = {f0.shape}')
+        f0 = self.f0_upsamp(f0[:, None]).transpose(1, 2)  # bs,L_upsampled,1
+        # print(f'f0 #2 shape = {f0.shape}')
         if(self.use_energy_convs):
             if(self.energy_linear_dim == 1):
-                energy = self.energy_upsamp(energy[:, None]).transpose(1, 2) # bs, t, n  
+                energy = self.energy_upsamp(energy[:, None]).transpose(1, 2) # bs,L_upsampled,1  
             else:
-                energy = self.energy_emb(energy.unsqueeze(-1))
-                print(f'energy #2 shape = {energy.shape}')
-                energy = self.energy_upsamp(energy.transpose(1, 2)) # bs, t, n
-                print(f'energy #3 shape = {energy.shape}')
+                energy = self.energy_emb(energy.unsqueeze(-1)) # bs,L,linear_dim
+                # print(f'energy #2 shape = {energy.shape}')
+                energy = self.energy_upsamp(energy.transpose(1, 2)) # bs, linear_dim, L_upsampled
+                # print(f'energy #3 shape = {energy.shape}')
         else:
             energy = self.energy_emb(energy)
 
-        # print(energy.shape, energy.mean())
 
-        # print(2,f0.shape, energy.shape)
         har_source, noi_source, uv = self.m_source(f0)
         har_source = har_source.transpose(1, 2)
-        print(f'f0 #3 shape = {har_source.shape}')
+        # print(f'f0 #3 shape = {har_source.shape}')
         
         x = self.conv_pre(x)
 
-        # print(x.shape)
 
         if(self.use_energy_convs):
             x = x + self.cond(g)
         else:
             x = x + self.cond(g) + energy.transpose(1,2)
 
-        # print(x.shape)
-
-        # print(f"#2 in Hifigan: energy mean = {energy.mean()} pitch mean = {f0.mean()} x mean = {x.mean()} har mean = {har_source.mean()}")
-
-        # print(124,x.shape,har_source.shape)
         for i in range(self.num_upsamples):
             x = F.leaky_relu(x, LRELU_SLOPE)
             # print(3,x.shape)
