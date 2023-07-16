@@ -430,7 +430,7 @@ class Generator_energy(torch.nn.Module):
             if(self.energy_linear_dim == 1):
                 energy = self.energy_upsamp(energy[:, None]).transpose(1, 2) # bs, t, n  
             else:
-                energy = self.energy_emb(energy)
+                energy = self.energy_emb(energy.unsqueeze(-1))
                 energy = self.energy_upsamp(energy.transpose(1, 2)) # bs, t, n
                 print(energy.shape, f0.shape)
         else:
