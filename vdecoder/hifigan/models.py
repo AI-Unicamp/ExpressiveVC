@@ -443,7 +443,7 @@ class Generator_energy(torch.nn.Module):
         else:
             energy = self.energy_emb(energy)
 
-        print(energy)
+        # print(energy)
 
 
         har_source, noi_source, uv = self.m_source(f0)
