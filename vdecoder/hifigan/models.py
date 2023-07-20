@@ -425,6 +425,11 @@ class Generator_energy(torch.nn.Module):
 
         print(energy)
 
+        energy = torch.clamp(energy, min=0)
+
+        print(energy)
+
+
         f0 = self.f0_upsamp(f0[:, None]).transpose(1, 2)  # bs,L_upsampled,1
         # print(f'f0 #2 shape = {f0.shape}')
         if(self.use_energy_convs):
