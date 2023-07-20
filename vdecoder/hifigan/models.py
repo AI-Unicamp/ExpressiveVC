@@ -422,6 +422,9 @@ class Generator_energy(torch.nn.Module):
         '''
         # print(f'energy #1 shape = {energy.shape}')
         # print(f'f0 #1 shape = {f0.shape}')
+
+        print(energy)
+
         f0 = self.f0_upsamp(f0[:, None]).transpose(1, 2)  # bs,L_upsampled,1
         # print(f'f0 #2 shape = {f0.shape}')
         if(self.use_energy_convs):
@@ -434,6 +437,8 @@ class Generator_energy(torch.nn.Module):
                 # print(f'energy #3 shape = {energy.shape}')
         else:
             energy = self.energy_emb(energy)
+
+        print(energy)
 
 
         har_source, noi_source, uv = self.m_source(f0)
